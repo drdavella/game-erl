@@ -1,10 +1,14 @@
+ERL_COMPILER:=erlc
+ENTRY_POINT:=main
+
+
 .PHONY: all run clean
 
-all: main.beam
+all: $(ENTRY_POINT).beam
 
 
 run: main.beam
-	@erl -noshell -s main start -s init stop
+	@erl -noshell -s $(ENTRY_POINT) start -s init stop
 
 clean:
 	@rm -f main.beam
