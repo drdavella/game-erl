@@ -1,16 +1,16 @@
 -module(cpu).
--export([tick/1]).
+-export([tick/2]).
 
-tick(<<16#f:4, Rest/bits>>) ->
-    io:fwrite("It's an 0xf!"),
-    Op =
-        case Rest of
-            <<16#0:4, _/bits>> -> "a";
-            <<16#a:4, _/bits>> -> "b"
-        end,
-    io:fwrite("op = ~w\n", [Op]);
-tick(<<16#b:4, Rest/bits>>) ->
-    io:fwrite("It's a 0xb!");
-tick(Unknown) ->
-    io:format("It's something else: ~w\n", [Unknown]),
-    io:fwrite("hey there now\n").
+
+tick(Code, Pc) ->
+    {_, Start} = lists:split(Pc, Code),
+    [Opcode|Rest] = Start,
+    decode(<<Opcode>>, Rest, Pc).
+
+decode(<<16#f3>>, _, Pc) ->
+    io:fwrite("disable interrupt\n"),
+    Pc + 1;
+decode(Unknown, _, Pc) ->
+    io:format("unknown instruction (pc=~w): 0x~.16B~n",
+              [Pc, hd(binary_to_list(Unknown))]),
+    Pc + 1.
