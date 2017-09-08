@@ -1,7 +1,7 @@
 ERL_COMPILER:=erlc
 ENTRY_POINT:=main
 
-COMPONENTS:=main cpu
+COMPONENTS:=main rom cpu
 SOURCE_FILES:=$(foreach name,$(COMPONENTS),$(name).erl)
 BEAM_FILES:=$(foreach name,$(COMPONENTS),$(name).beam)
 
