@@ -1,5 +1,5 @@
 -module(cpu).
--export([tick/2]).
+-export([run/1]).
 
 
 % Some (very) basic logging machinery
@@ -10,10 +10,22 @@ bin_to_int(Bits) when is_bitstring(Bits) ->
 bin_to_int(Int) when is_integer(Int) ->
     Int.
 
-tick(Code, Pc) ->
+run(Code) ->
+    State = dict:from_list([{pc, 0}]),
+    loop(Code, State).
+
+loop(Code, State) ->
+    loop(Code, tick(Code, State)).
+
+tick(Code, State) ->
+    Pc = dict:fetch(pc, State),
     {_, Start} = lists:split(Pc, Code),
     [Opcode|Rest] = Start,
-    decode(<<Opcode>>, Rest, Pc).
+    dict:store(pc, decode(<<Opcode>>, Rest, Pc), State).
+
+op2(LowNibble) ->
+    <<Index:4>> = LowNibble,
+    lists:nth((Index rem 8) + 1, [b,c,d,e,h,l,hl,a]).
 
 % Disable interrupt
 decode(<<16#f3>>, _, Pc) ->
@@ -21,6 +33,7 @@ decode(<<16#f3>>, _, Pc) ->
     Pc + 1;
 % ADD operations
 decode(<<16#8:4, LowNibble/bits>>, _, Pc) ->
+    io:fwrite("op2=~w~n", [op2(LowNibble)]),
     Pc + 1;
 % SUB operations
 decode(<<16#9:4, LowNibble/bits>>, _, Pc) ->
