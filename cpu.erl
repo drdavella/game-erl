@@ -13,9 +13,12 @@ bin_to_int(Int) when is_integer(Int) ->
     Int.
 
 run(Code) ->
+    % For now we're initializing the entire memory array to 0, although that
+    % may not end up being a great idea in practice...
+    Memory = array:new(1 bsl 16, {default, 0}),
     State = dict:from_list([
         {pc, 0},
-        {sp, 0}, % TODO: where does sp start?
+        {sp, 0}, % TODO: I believe sp gets initialized by the program itself
         {a, 0},
         {b, 0},
         {c, 0},
@@ -23,7 +26,9 @@ run(Code) ->
         {e, 0},
         {h, 0},
         {l, 0},
-        {halt, false}]),
+        {halt, false},
+        {mem, Memory}
+    ]),
     loop(Code, State).
 
 loop(Code, State) ->
@@ -50,11 +55,13 @@ op2(LowNibble) ->
     lists:nth((Index rem 8) + 1, [b,c,d,e,h,l,hl,a]).
 get_hl(State) ->
     (dict:fetch(h, State) bsl 8) bor dict:fetch(l, State).
+read_mem(State, Addr) ->
+    array:get(Addr, dict:fetch(mem, State)).
 
 do_load(State, Dest, Source) when Source == hl ->
     Address = get_hl(State),
     io:fwrite("read memory at addr=~w~n", [Address]),
-    State;
+    dict:store(Dest, read_mem(State, Address), State);
 do_load(State, Dest, Source) ->
     io:fwrite("ld ~w->~w~n", [Source, Dest]),
     dict:store(Dest, dict:fetch(Source, State), State).
