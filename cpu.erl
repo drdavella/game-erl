@@ -82,8 +82,8 @@ decode(<<16#B:4, LowNibble/bits>>, _, State) ->
 decode(<<H:4, LowNibble/bits>>, _, State) when H >= 4, H =< 7 ->
     <<NibbleVal:4/integer>> = LowNibble,
     io:fwrite("LD: 0x~w~.16B: ", [H, NibbleVal]),
-    do_load(load_dest(H, LowNibble), op2(LowNibble)),
-    dict:update_counter(pc, 1, State);
+    UpdatedState = do_load(State, load_dest(H, LowNibble), op2(LowNibble)),
+    dict:update_counter(pc, 1, UpdatedState);
 % Unrecognized instruction (error condition, used for development)
 decode(Unknown, _, State) ->
     Pc = dict:fetch(pc, State),
