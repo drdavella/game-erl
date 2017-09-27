@@ -48,9 +48,13 @@ load_dest(High, LowNibble) ->
 op2(LowNibble) ->
     <<Index:4>> = LowNibble,
     lists:nth((Index rem 8) + 1, [b,c,d,e,h,l,hl,a]).
+get_hl(State) ->
+    (dict:fetch(h, State) bsl 8) bor dict:fetch(l, State).
 
-do_load(Dest, Source) when Source == hl ->
-    io:fwrite("read memory!~n");
+do_load(State, Dest, Source) when Source == hl ->
+    Address = get_hl(State),
+    io:fwrite("read memory at addr=~w~n", [Address]),
+    State;
 do_load(State, Dest, Source) ->
     io:fwrite("ld ~w->~w~n", [Source, Dest]),
     dict:store(Dest, dict:fetch(Source, State), State).
