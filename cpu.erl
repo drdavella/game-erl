@@ -51,8 +51,9 @@ op2(LowNibble) ->
 
 do_load(Dest, Source) when Source == hl ->
     io:fwrite("read memory!~n");
-do_load(Dest, Source) ->
-    io:fwrite("ld ~w->~w~n", [Source, Dest]).
+do_load(State, Dest, Source) ->
+    io:fwrite("ld ~w->~w~n", [Source, Dest]),
+    dict:store(Dest, dict:fetch(Source, State), State).
 
 % Disable interrupt
 decode(<<16#f3>>, _, State) ->
