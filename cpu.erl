@@ -73,6 +73,9 @@ do_load(State, Dest, Source) ->
     io:fwrite("ld ~w->~w~n", [Source, Dest]),
     dict:store(Dest, dict:fetch(Source, State), State).
 
+% NOP
+decode(<<0>>, _, State) ->
+    dict:update_counter(pc, 1, State);
 % Disable interrupt
 decode(<<16#f3>>, _, State) ->
     io:fwrite("disable interrupt~n"),
