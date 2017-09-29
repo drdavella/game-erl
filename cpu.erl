@@ -55,6 +55,7 @@ op2(LowNibble) ->
     lists:nth((Index rem 8) + 1, [b,c,d,e,h,l,hl,a]).
 get_hl(State) ->
     (dict:fetch(h, State) bsl 8) bor dict:fetch(l, State).
+
 read_mem(State, Addr) ->
     array:get(Addr, dict:fetch(mem, State)).
 
@@ -73,42 +74,45 @@ do_load(State, Dest, Source) ->
     io:fwrite("ld ~w->~w~n", [Source, Dest]),
     dict:store(Dest, dict:fetch(Source, State), State).
 
+increment_pc(State, Inc) ->
+    dict:update_counter(pc, Inc, State).
+
 % NOP
 decode(<<0>>, _, State) ->
-    dict:update_counter(pc, 1, State);
+    increment_pc(State, 1);
 % Disable interrupt
 decode(<<16#f3>>, _, State) ->
     io:fwrite("disable interrupt~n"),
-    dict:update_counter(pc, 1, State);
+    increment_pc(State, 1);
 % HALT instruction
 decode(<<16#76>>, _, State) ->
     io:fwrite("HALT"),
     % TODO: update this once interrupts actually work
     % NewState = dict:store(halt, true, State),
     % dict:store(pc, dict:fetch(pc, NewState) + 1, NewState);
-    dict:update_counter(pc, 1, State);
+    increment_pc(State, 1);
 % ADD operations
 decode(<<16#8:4, LowNibble/bits>>, _, State) ->
     io:fwrite("op2=~w~n", [op2(LowNibble)]),
-    dict:update_counter(pc, 1, State);
+    increment_pc(State, 1);
 % SUB operations
 decode(<<16#9:4, LowNibble/bits>>, _, State) ->
-    dict:update_counter(pc, 1, State);
+    increment_pc(State, 1);
 % Bitwise AND operations
 decode(<<16#A:4, LowNibble/bits>>, _, State) ->
-    dict:update_counter(pc, 1, State);
+    increment_pc(State, 1);
 % Bitwise OR operations
 decode(<<16#B:4, LowNibble/bits>>, _, State) ->
-    dict:update_counter(pc, 1, State);
+    increment_pc(State, 1);
 % Load operations
 decode(<<H:4, LowNibble/bits>>, _, State) when H >= 4, H =< 7 ->
     <<NibbleVal:4/integer>> = LowNibble,
     io:fwrite("LD: 0x~w~.16B: ", [H, NibbleVal]),
     UpdatedState = do_load(State, load_dest(H, LowNibble), op2(LowNibble)),
-    dict:update_counter(pc, 1, UpdatedState);
+    increment_pc(State, 1);
 % Unrecognized instruction (error condition, used for development)
 decode(Unknown, _, State) ->
     Pc = dict:fetch(pc, State),
     io:format("unknown instruction (pc=~w): 0x~.16B~n",
               [Pc, bin_to_int(Unknown)]),
-    dict:update_counter(pc, 1, State).
+    increment_pc(State, 1).
