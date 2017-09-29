@@ -3,7 +3,7 @@ import os
 import sys
 
 
-HEADER_END = 0x14f
+HEADER_START = 0x100
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
     basename = os.path.splitext(os.path.basename(romname))[0]
     newname = basename + ".dump"
     with open(newname, 'wb') as fh:
-        fh.write(data[HEADER_END+1:])
+        fh.write(data[HEADER_START:])
 
 
 if __name__ == '__main__':
