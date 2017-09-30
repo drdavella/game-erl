@@ -2,6 +2,7 @@
 -export([run/1]).
 
 -define(BYTE_MASK, 16#ff).
+-define(BOOT_ROM_START, 16#100).
 
 
 % Some (very) basic logging machinery
@@ -41,7 +42,8 @@ tick(Code, State) ->
             NewState = State;
         false ->
             Pc = dict:fetch(pc, State),
-            {_, Start} = lists:split(Pc, Code),
+            % For the time being, 0x100 of the cartridge rom is at addr=0x0
+            {_, Start} = lists:split(Pc-?BOOT_ROM_START, Code),
             [Opcode|Rest] = Start,
             NewState = decode(<<Opcode>>, Rest, State)
     end,
