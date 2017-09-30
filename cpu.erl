@@ -13,24 +13,32 @@ bin_to_int(Bits) when is_bitstring(Bits) ->
 bin_to_int(Int) when is_integer(Int) ->
     Int.
 
+% This initializes the processor state to what would be expected after the
+% internal boot ROM has executed. We don't emulate that process directly, so
+% we make sure we set up the expected state.
+init_state() ->
+    Memory = array:new(1 bsl 16, {default, 0}),
+    dict:from_list([
+        {pc, ?BOOT_ROM_START}, % Boot ROM jumps to PC=0x100 when it's done
+        {sp, 16#fffe}, % Boot ROM initializes the stack pointer
+        % These values all come from the Pan Docs, but programs shouldn't
+        % necessarily assume this state will be present.
+        {a, 16#01},
+        {f, 16#b0},
+        {b, 16#00},
+        {c, 16#13},
+        {d, 16#00},
+        {e, 16#d8},
+        {h, 16#01},
+        {l, 16#4d},
+        {halt, false},
+        {mem, Memory}
+    ]).
+
 run(Code) ->
     % For now we're initializing the entire memory array to 0, although that
     % may not end up being a great idea in practice...
-    Memory = array:new(1 bsl 16, {default, 0}),
-    State = dict:from_list([
-        {pc, 0},
-        {sp, 0}, % TODO: I believe sp gets initialized by the program itself
-        {a, 0},
-        {b, 0},
-        {c, 0},
-        {d, 0},
-        {e, 0},
-        {h, 0},
-        {l, 0},
-        {halt, false},
-        {mem, Memory}
-    ]),
-    loop(Code, State).
+    loop(Code, init_state()).
 
 loop(Code, State) ->
     loop(Code, tick(Code, State)).
@@ -81,6 +89,7 @@ increment_pc(State, Inc) ->
 
 % NOP
 decode(<<0>>, _, State) ->
+    io:fwrite("NOP~n"),
     increment_pc(State, 1);
 % Disable interrupt
 decode(<<16#f3>>, _, State) ->
