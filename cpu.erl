@@ -1,5 +1,6 @@
 -module(cpu).
 -import(memory, [do_load/3]).
+-import(jump, [jump/3]).
 -export([run/1]).
 
 -define(BYTE_MASK, 16#ff).
@@ -82,6 +83,9 @@ decode(<<16#76>>, _, State) ->
     % NewState = dict:store(halt, true, State),
     % dict:store(pc, dict:fetch(pc, NewState) + 1, NewState);
     increment_pc(State, 1);
+% JP unconditional
+decode(<<16#c3>>, Code, State) ->
+    jump(unconditional, Code, State);
 % ADD operations
 decode(<<16#8:4, LowNibble/bits>>, _, State) ->
     io:fwrite("op2=~w~n", [op2(LowNibble)]),
