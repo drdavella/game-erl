@@ -1,5 +1,5 @@
 -module(cpu).
--import(memory, [load/3, load_imm/3]).
+-import(memory, [load/3, load_imm_d/3]).
 -import(jump, [jump/3]).
 -export([run/1]).
 
@@ -106,10 +106,10 @@ decode(<<H:4, LowNibble/bits>>, _, State) when H >= 4, H =< 7 ->
     io:fwrite("LD: 0x~.16B~.16B: ", [H, NibbleVal]),
     NewState = load(State, load_dest(H, LowNibble), op2(LowNibble)),
     increment_pc(NewState, 1);
-% Load immediates
+% Load double-word immediates
 decode(<<H:4, 16#1:4>>, Code, State) when H =< 3 ->
     io:fwrite("LD imm: 0x~.16B1: ", [H]),
-    NewState = load_imm(State, Code, H),
+    NewState = load_imm_d(State, Code, H),
     increment_pc(NewState, 3);
 % Unrecognized instruction (error condition, used for development)
 decode(Unknown, _, State) ->
