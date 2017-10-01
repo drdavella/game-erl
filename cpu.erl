@@ -108,6 +108,7 @@ decode(<<H:4, LowNibble/bits>>, _, State) when H >= 4, H =< 7 ->
 % Unrecognized instruction (error condition, used for development)
 decode(Unknown, _, State) ->
     Pc = dict:fetch(pc, State),
-    io:format("unknown instruction (pc=~w): 0x~.16B~n",
+    io:format("unknown instruction (pc=0x~.16B): 0x~.16B~n",
               [Pc, bin_to_int(Unknown)]),
-    increment_pc(State, 1).
+    erlang:error(unknown_instruction).
+    %increment_pc(State, 1).
