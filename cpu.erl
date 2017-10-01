@@ -1,5 +1,5 @@
 -module(cpu).
--import(memory, [do_load/3, load_imm/3]).
+-import(memory, [load/3, load_imm/3]).
 -import(jump, [jump/3]).
 -export([run/1]).
 
@@ -104,7 +104,7 @@ decode(<<16#B:4, LowNibble/bits>>, _, State) ->
 decode(<<H:4, LowNibble/bits>>, _, State) when H >= 4, H =< 7 ->
     <<NibbleVal:4/integer>> = LowNibble,
     io:fwrite("LD: 0x~.16B~.16B: ", [H, NibbleVal]),
-    NewState = do_load(State, load_dest(H, LowNibble), op2(LowNibble)),
+    NewState = load(State, load_dest(H, LowNibble), op2(LowNibble)),
     increment_pc(NewState, 1);
 % Load immediates
 decode(<<H:4, 16#1:4>>, Code, State) when H =< 3 ->
