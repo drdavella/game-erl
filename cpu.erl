@@ -1,5 +1,5 @@
 -module(cpu).
--import(memory, [do_load/3]).
+-import(memory, [do_load/3, load_imm/3]).
 -import(jump, [jump/3]).
 -export([run/1]).
 
@@ -34,6 +34,7 @@ init_state() ->
         {h, 16#01},
         {l, 16#4d},
         {halt, false},
+        {tick, 0}, % tick counter
         {mem, Memory}
     ]).
 
@@ -102,9 +103,14 @@ decode(<<16#B:4, LowNibble/bits>>, _, State) ->
 % Load operations
 decode(<<H:4, LowNibble/bits>>, _, State) when H >= 4, H =< 7 ->
     <<NibbleVal:4/integer>> = LowNibble,
-    io:fwrite("LD: 0x~w~.16B: ", [H, NibbleVal]),
-    UpdatedState = do_load(State, load_dest(H, LowNibble), op2(LowNibble)),
-    increment_pc(State, 1);
+    io:fwrite("LD: 0x~.16B~.16B: ", [H, NibbleVal]),
+    NewState = do_load(State, load_dest(H, LowNibble), op2(LowNibble)),
+    increment_pc(NewState, 1);
+% Load immediates
+decode(<<H:4, 16#1:4>>, Code, State) when H =< 3 ->
+    io:fwrite("LD imm: 0x~.16B1: ", [H]),
+    NewState = load_imm(State, Code, H),
+    increment_pc(NewState, 3);
 % Unrecognized instruction (error condition, used for development)
 decode(Unknown, _, State) ->
     Pc = dict:fetch(pc, State),

@@ -1,6 +1,6 @@
 -module(memory).
 -import(utils, [update_tick/2]).
--export([do_load/3]).
+-export([do_load/3, load_imm/3]).
 
 
 get_hl(State) ->
@@ -26,3 +26,18 @@ do_load(State, Dest, Source) ->
     io:fwrite("ld ~w->~w~n", [Source, Dest]),
     NewState = dict:store(Dest, dict:fetch(Source, State), State),
     update_tick(4, NewState).
+
+load_imm_impl([H, L], State, High, Low) ->
+    io:fwrite("load ~w~w with 0x~.016B~.016B~n", [H, L, High, Low]),
+    NewState = dict:store(H, High, State),
+    dict:store(L, Low, State);
+load_imm_impl([sp], State, High, Low) ->
+    io:fwrite("load sp with 0x~.16B~.16B~n", [High, Low]),
+    Data = (High bsl 8) bor Low,
+    dict:store(sp, Data, State).
+
+load_imm(State, Code, Index) ->
+    [HighData, LowData | _] = Code,
+    Dests = lists:nth(Index + 1, [[b,c], [d,e], [h,l], [sp]]),
+    NewState = load_imm_impl(Dests, State, HighData, LowData),
+    update_tick(8, NewState).
