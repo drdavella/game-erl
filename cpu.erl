@@ -1,5 +1,5 @@
 -module(cpu).
--import(memory, [load/3, load_imm_d/3]).
+-import(memory, [load/3, load_imm/3, load_imm_d/3]).
 -import(jump, [jump/3]).
 -export([run/1]).
 
@@ -82,7 +82,6 @@ decode(<<16#76>>, _, State) ->
     io:fwrite("HALT"),
     % TODO: update this once interrupts actually work
     % NewState = dict:store(halt, true, State),
-    % dict:store(pc, dict:fetch(pc, NewState) + 1, NewState);
     increment_pc(State, 1);
 % JP unconditional
 decode(<<16#c3>>, Code, State) ->
@@ -100,17 +99,23 @@ decode(<<16#A:4, LowNibble/bits>>, _, State) ->
 % Bitwise OR operations
 decode(<<16#B:4, LowNibble/bits>>, _, State) ->
     increment_pc(State, 1);
-% Load operations
+% Load double-word immediates
+decode(<<H:4, 16#1:4>>, Code, State) when H =< 3 ->
+    io:fwrite("LDD imm: 0x~.16B1: ", [H]),
+    NewState = load_imm_d(State, Code, H),
+    increment_pc(NewState, 3);
+% Load single-word immediates
+decode(<<H:4, L:4>>, Code, State)
+  when H =< 3, (L == 6 orelse L == 16#e) ->
+    io:fwrite("LD imm: 0x~.16B~.16B: ", [H, L]),
+    NewState = load_imm(State, Code, [H, L]),
+    increment_pc(NewState, 2);
+% Loads to/from memory
 decode(<<H:4, LowNibble/bits>>, _, State) when H >= 4, H =< 7 ->
     <<NibbleVal:4/integer>> = LowNibble,
     io:fwrite("LD: 0x~.16B~.16B: ", [H, NibbleVal]),
     NewState = load(State, load_dest(H, LowNibble), op2(LowNibble)),
     increment_pc(NewState, 1);
-% Load double-word immediates
-decode(<<H:4, 16#1:4>>, Code, State) when H =< 3 ->
-    io:fwrite("LD imm: 0x~.16B1: ", [H]),
-    NewState = load_imm_d(State, Code, H),
-    increment_pc(NewState, 3);
 % Unrecognized instruction (error condition, used for development)
 decode(Unknown, _, State) ->
     Pc = dict:fetch(pc, State),
