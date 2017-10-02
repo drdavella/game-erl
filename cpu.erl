@@ -1,9 +1,11 @@
 -module(cpu).
--import(memory, [load/3, load_imm/3, load_imm_d/3]).
 -import(jump, [jump/3]).
+-import(memory, [load/3, load_imm/3, load_imm_d/3]).
+-import(utils, [update_tick/2]).
 -export([run/1]).
 
 -define(BYTE_MASK, 16#ff).
+-define(WORD_MASK, 16#ffff).
 -define(BOOT_ROM_START, 16#100).
 
 
@@ -66,6 +68,8 @@ load_dest(High, LowNibble) ->
 op2(LowNibble) ->
     <<Index:4>> = LowNibble,
     lists:nth((Index rem 8) + 1, [b,c,d,e,h,l,hl,a]).
+inc16(Value) ->
+    (Value + 1) band ?WORD_MASK.
 increment_pc(State, Inc) ->
     dict:update_counter(pc, Inc, State).
 
@@ -86,6 +90,11 @@ decode(<<16#76>>, _, State) ->
 % JP unconditional
 decode(<<16#c3>>, Code, State) ->
     jump(unconditional, Code, State);
+% INC SP
+decode(<<16#33>>, _, State) ->
+    io:fwrite("increment stack pointer~n"),
+    NewState = dict:update(sp, fun inc16/1, State),
+    increment_pc(update_tick(8, NewState), 1);
 % ADD operations
 decode(<<16#8:4, LowNibble/bits>>, _, State) ->
     io:fwrite("op2=~w~n", [op2(LowNibble)]),
