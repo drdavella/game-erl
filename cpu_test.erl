@@ -1,0 +1,3 @@
+-module(cpu_test).
+-import(cpu, [decode/3]).
+-include_lib("eunit/include/eunit.hrl").

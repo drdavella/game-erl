@@ -1,6 +1,6 @@
 ERL_COMPILER:=erlc
 
-COMPONENTS:=main rom cpu memory jump utils
+COMPONENTS:=main rom cpu memory jump utils cpu_test
 SOURCE_FILES:=$(foreach name,$(COMPONENTS),$(name).erl)
 BEAM_FILES:=$(foreach name,$(COMPONENTS),$(name).beam)
 
