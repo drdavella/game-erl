@@ -1,6 +1,6 @@
 -module(memory).
--import(utils, [update_tick/2]).
--export([load/3, load_imm/3, load_imm_d/3]).
+-import(utils, [inc16/1, dec16/1, update_tick/2]).
+-export([load/3, load_imm/3, load_imm_d/3, load_and_update/3]).
 
 
 get_hl(State) ->
@@ -63,3 +63,19 @@ load_imm_d(State, Code, Index) ->
     Dests = lists:nth(Index + 1, [[b,c], [d,e], [h,l], [sp]]),
     NewState = load_imm_d_impl(Dests, State, HighData, LowData),
     update_tick(8, NewState).
+
+store_hl(Address, State) ->
+    <<H:8, L:8>> = Address,
+    NewState = dict:store(h, H, State),
+    dict:store(l, L, NewState).
+
+update_hl(Update, Address, State) ->
+    Func = maps:get(Update, #{dec=>fun utils:dec16/1, inc=>fun utils:inc16/1}),
+    NewAddr = Func(Address),
+    store_hl(Address, State).
+
+% Load and update memory address
+load_and_update(hl, Update, State) ->
+    Address = get_hl(State),
+    NewState = write_mem(State, Address, dict:fetch(a, State)),
+    update_tick(8, update_hl(Update, Address, NewState)).
