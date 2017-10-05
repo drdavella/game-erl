@@ -78,7 +78,7 @@ increment_pc(State, Inc) ->
 % NOP
 decode(<<0>>, _, State) ->
     io:fwrite("NOP~n"),
-    increment_pc(State, 1);
+    increment_pc(update_tick(4, State), 1);
 % Disable interrupt
 decode(<<16#f3>>, _, State) ->
     io:fwrite("disable interrupt~n"),
