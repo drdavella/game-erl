@@ -2,7 +2,12 @@
 -import(jump, [jump/3]).
 -import(memory, [load/3, load_imm/3, load_imm_d/3, load_and_update/3]).
 -import(utils, [inc16/1, update_tick/2]).
+
+-ifdef(TEST).
+-compile(export_all).
+-else.
 -export([run/1]).
+-endif.
 
 -define(BYTE_MASK, 16#ff).
 -define(BOOT_ROM_START, 16#100).

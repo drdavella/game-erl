@@ -9,7 +9,12 @@ BEAM_FILES:=$(foreach name,$(COMPONENTS),$(name).beam)
 
 
 all:
-	@erl -make
+	@erl -make $(ERL_FLAGS)
+
+test: ERL_FLAGS=-DTEST
+test: all
+
+
 
 run: all
 	@erl -pa ebin -s game_erl -s init stop
