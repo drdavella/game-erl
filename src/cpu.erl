@@ -72,23 +72,23 @@ load_dest(High, LowNibble) ->
 op2(LowNibble) ->
     <<Index:4>> = LowNibble,
     lists:nth((Index rem 8) + 1, [b,c,d,e,h,l,hl,a]).
-increment_pc(State, Inc) ->
+increment_pc(Inc, State) ->
     dict:update_counter(pc, Inc, State).
 
 % NOP
 decode(<<0>>, _, State) ->
     io:fwrite("NOP~n"),
-    increment_pc(update_tick(4, State), 1);
+    increment_pc(1, update_tick(4, State));
 % Disable interrupt
 decode(<<16#f3>>, _, State) ->
     io:fwrite("disable interrupt~n"),
-    increment_pc(State, 1);
+    increment_pc(1, State);
 % HALT instruction
 decode(<<16#76>>, _, State) ->
     io:fwrite("HALT"),
     % TODO: update this once interrupts actually work
     % NewState = dict:store(halt, true, State),
-    increment_pc(State, 1);
+    increment_pc(1, State);
 % JP unconditional
 decode(<<16#c3>>, Code, State) ->
     jump(unconditional, Code, State);
@@ -96,12 +96,12 @@ decode(<<16#c3>>, Code, State) ->
 decode(<<16#22>>, _, State) ->
     io:fwrite("LD (HL+), A"),
     NewState = load_and_update(hl, inc, State),
-    increment_pc(NewState, 1);
+    increment_pc(1, NewState);
 % LD (HL-), A
 decode(<<16#32>>, _, State) ->
     io:fwrite("LD (HL-), A"),
     NewState = load_and_update(hl, dec, State),
-    increment_pc(NewState, 1);
+    increment_pc(1, NewState);
 % INC SP
 decode(<<16#33>>, _, State) ->
     io:fwrite("increment stack pointer~n"),
@@ -110,37 +110,36 @@ decode(<<16#33>>, _, State) ->
 % ADD operations
 decode(<<16#8:4, LowNibble/bits>>, _, State) ->
     io:fwrite("op2=~w~n", [op2(LowNibble)]),
-    increment_pc(State, 1);
+    increment_pc(1, State);
 % SUB operations
 decode(<<16#9:4, LowNibble/bits>>, _, State) ->
-    increment_pc(State, 1);
+    increment_pc(1, State);
 % Bitwise AND operations
 decode(<<16#A:4, LowNibble/bits>>, _, State) ->
-    increment_pc(State, 1);
+    increment_pc(1, State);
 % Bitwise OR operations
 decode(<<16#B:4, LowNibble/bits>>, _, State) ->
-    increment_pc(State, 1);
+    increment_pc(1, State);
 % Load double-word immediates
 decode(<<H:4, 16#1:4>>, Code, State) when H =< 3 ->
     io:fwrite("LDD imm: 0x~.16B1: ", [H]),
     NewState = load_imm_d(State, Code, H),
-    increment_pc(NewState, 3);
+    increment_pc(3, NewState);
 % Load single-word immediates
 decode(<<H:4, L:4>>, Code, State)
   when H =< 3, (L == 6 orelse L == 16#e) ->
     io:fwrite("LD imm: 0x~.16B~.16B: ", [H, L]),
     NewState = load_imm(State, Code, [H, L]),
-    increment_pc(NewState, 2);
+    increment_pc(2, NewState);
 % Loads to/from memory
 decode(<<H:4, LowNibble/bits>>, _, State) when H >= 4, H =< 7 ->
     <<NibbleVal:4/integer>> = LowNibble,
     io:fwrite("LD: 0x~.16B~.16B: ", [H, NibbleVal]),
     NewState = load(State, load_dest(H, LowNibble), op2(LowNibble)),
-    increment_pc(NewState, 1);
+    increment_pc(1, NewState);
 % Unrecognized instruction (error condition, used for development)
 decode(Unknown, _, State) ->
     Pc = dict:fetch(pc, State),
     io:format("unknown instruction (pc=0x~.16B): 0x~.16B~n",
               [Pc, bin_to_int(Unknown)]),
     erlang:error(unknown_instruction).
-    %increment_pc(State, 1).
