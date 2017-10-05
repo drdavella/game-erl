@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -eu
+
+erl -pa ebin -s game_erl -s init stop
