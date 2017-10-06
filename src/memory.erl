@@ -65,7 +65,7 @@ load_imm_d(State, Code, Index) ->
     update_tick(8, NewState).
 
 store_hl(Address, State) ->
-    <<H:8, L:8>> = Address,
+    <<H:8, L:8>> = <<Address:16>>,
     NewState = dict:store(h, H, State),
     dict:store(l, L, NewState).
 
