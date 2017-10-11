@@ -82,7 +82,7 @@ decode(<<0>>, _, State) ->
 % Disable interrupt
 decode(<<16#f3>>, _, State) ->
     io:fwrite("disable interrupt~n"),
-    erlang:error(not_implemented),
+    %erlang:error(not_implemented),
     increment_pc(1, State);
 % HALT instruction
 decode(<<16#76>>, _, State) ->
