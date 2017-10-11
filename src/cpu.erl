@@ -116,14 +116,17 @@ decode(<<16#8:4, LowNibble/bits>>, _, State) ->
     increment_pc(1, State);
 % SUB operations
 decode(<<16#9:4, LowNibble/bits>>, _, State) ->
+    io:fwrite("SUBTRACT"),
     erlang:error(not_implemented),
     increment_pc(1, State);
 % Bitwise AND operations
 decode(<<16#A:4, LowNibble/bits>>, _, State) ->
+    io:fwrite("BAND"),
     erlang:error(not_implemented),
     increment_pc(1, State);
 % Bitwise OR operations
 decode(<<16#B:4, LowNibble/bits>>, _, State) ->
+    io:fwrite("BOR"),
     erlang:error(not_implemented),
     increment_pc(1, State);
 % Load double-word immediates
