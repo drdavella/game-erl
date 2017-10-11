@@ -10,8 +10,9 @@ read_mem(State, Addr) ->
     array:get(Addr, dict:fetch(mem, State)).
 
 write_mem(State, Addr, Value) ->
-    erlang:error(not_implemented),
-    State.
+    NewMem = array:set(Addr, Value, dict:fetch(mem, State)),
+    io:fwrite("mem[0x~.16B] = 0x~.16B~n", [Addr, Value]),
+    dict:store(mem, NewMem, State).
 
 
 load(State, Dest, Source) when Source == hl ->
@@ -72,7 +73,7 @@ store_hl(Address, State) ->
 update_hl(Update, Address, State) ->
     Func = maps:get(Update, #{dec=>fun utils:dec16/1, inc=>fun utils:inc16/1}),
     NewAddr = Func(Address),
-    store_hl(Address, State).
+    store_hl(NewAddr, State).
 
 % Load and update memory address
 load_and_update(hl, Update, State) ->
