@@ -52,7 +52,7 @@ load_imm(State, Code, [High, Low]) ->
 load_imm_d_impl([H, L], State, High, Low) ->
     io:fwrite("load ~w~w with 0x~.16B~.16B~n", [H, L, High, Low]),
     NewState = dict:store(H, High, State),
-    dict:store(L, Low, State);
+    dict:store(L, Low, NewState);
 load_imm_d_impl([sp], State, High, Low) ->
     io:fwrite("load sp with 0x~.16B~.16B~n", [High, Low]),
     Data = (High bsl 8) bor Low,

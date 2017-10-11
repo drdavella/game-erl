@@ -17,4 +17,4 @@ do_jump(false, _, State) ->
 
 get_addr(Code) ->
     [Low, High | _] = Code,
-    Address = (High bsl 8) bor Low.
+    (High bsl 8) bor Low.
