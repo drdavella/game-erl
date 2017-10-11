@@ -82,12 +82,14 @@ decode(<<0>>, _, State) ->
 % Disable interrupt
 decode(<<16#f3>>, _, State) ->
     io:fwrite("disable interrupt~n"),
+    erlang:error(not_implemented),
     increment_pc(1, State);
 % HALT instruction
 decode(<<16#76>>, _, State) ->
     io:fwrite("HALT"),
     % TODO: update this once interrupts actually work
     % NewState = dict:store(halt, true, State),
+    erlang:error(not_implemented),
     increment_pc(1, State);
 % JP unconditional
 decode(<<16#c3>>, Code, State) ->
@@ -110,15 +112,19 @@ decode(<<16#33>>, _, State) ->
 % ADD operations
 decode(<<16#8:4, LowNibble/bits>>, _, State) ->
     io:fwrite("op2=~w~n", [op2(LowNibble)]),
+    erlang:error(not_implemented),
     increment_pc(1, State);
 % SUB operations
 decode(<<16#9:4, LowNibble/bits>>, _, State) ->
+    erlang:error(not_implemented),
     increment_pc(1, State);
 % Bitwise AND operations
 decode(<<16#A:4, LowNibble/bits>>, _, State) ->
+    erlang:error(not_implemented),
     increment_pc(1, State);
 % Bitwise OR operations
 decode(<<16#B:4, LowNibble/bits>>, _, State) ->
+    erlang:error(not_implemented),
     increment_pc(1, State);
 % Load double-word immediates
 decode(<<H:4, 16#1:4>>, Code, State) when H =< 3 ->
