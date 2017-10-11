@@ -2,4 +2,4 @@
 
 set -eu
 
-erl -pa ebin -s game_erl -s init stop
+erl -pa _build/default/lib/game_erl/ebin -s game_erl -s init stop
