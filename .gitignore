@@ -1,3 +1,6 @@
 *.beam
 *.dump
 *.gb
+_build
+rebar.lock
+TODO
