@@ -2,6 +2,7 @@
 -import(jump, [jump/3]).
 -import(memory, [load/3, load_imm/3, load_imm_d/3, load_and_update/3]).
 -import(utils, [inc16/1, update_tick/2]).
+-import(interrupt, [disable_interrupts/1, process_interrupts/1]).
 
 -ifdef(TEST).
 -compile(export_all).
@@ -41,8 +42,13 @@ init_state() ->
         {l, 16#4d},
         {halt, false},
         {tick, 0}, % tick counter
+        % registers for control of interrupts
+        {di_pending, false},
+        {ie_pending, false},
+        {ime, 0},
         {mem, Memory}
     ]).
+
 
 run(Code) ->
     % For now we're initializing the entire memory array to 0, although that
@@ -55,7 +61,7 @@ loop(Code, State) ->
 tick(Code, State) ->
     case dict:fetch(halt, State) of
         true ->
-            io:fwrite("NOP~n"),
+            io:fwrite("Halted: NOP~n"),
             NewState = State;
         false ->
             Pc = dict:fetch(pc, State),
@@ -64,7 +70,7 @@ tick(Code, State) ->
             [Opcode|Rest] = Start,
             NewState = decode(<<Opcode>>, Rest, State)
     end,
-    NewState.
+    process_interrupts(NewState).
 
 load_dest(High, LowNibble) ->
     <<Low:4>> = LowNibble,
@@ -82,8 +88,9 @@ decode(<<0>>, _, State) ->
 % Disable interrupt
 decode(<<16#f3>>, _, State) ->
     io:fwrite("disable interrupt~n"),
-    %erlang:error(not_implemented),
-    increment_pc(1, State);
+    % This instruction disables interrupts, but not immediately. Interrupts
+    % are disabled after instruction after DI is executed.
+    increment_pc(1, disable_interrupts(State));
 % HALT instruction
 decode(<<16#76>>, _, State) ->
     io:fwrite("HALT"),
