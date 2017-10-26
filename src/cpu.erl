@@ -40,6 +40,7 @@ init_state() ->
         {e, 16#d8},
         {h, 16#01},
         {l, 16#4d},
+        {flags, 0},
         {halt, false},
         {tick, 0}, % tick counter
         % registers for control of interrupts
@@ -72,11 +73,9 @@ tick(Code, State) ->
     end,
     process_interrupts(NewState).
 
-load_dest(High, LowNibble) ->
-    <<Low:4>> = LowNibble,
+load_dest(High, Low) ->
     lists:nth((High - 4) * 2 + (Low div 8) + 1, [b,c,d,e,h,l,hl,a]).
-op2(LowNibble) ->
-    <<Index:4>> = LowNibble,
+op2(Index) ->
     lists:nth((Index rem 8) + 1, [b,c,d,e,h,l,hl,a]).
 increment_pc(Inc, State) ->
     dict:update_counter(pc, Inc, State).
@@ -117,7 +116,7 @@ decode(<<16#33>>, _, State) ->
     NewState = dict:update(sp, fun utils:inc16/1, State),
     increment_pc(update_tick(8, NewState), 1);
 % ADD operations
-decode(<<16#8:4, LowNibble/bits>>, _, State) ->
+decode(<<16#8:4, LowNibble:4>>, _, State) ->
     io:fwrite("op2=~w~n", [op2(LowNibble)]),
     erlang:error(not_implemented),
     increment_pc(1, State);
@@ -127,10 +126,13 @@ decode(<<16#9:4, LowNibble/bits>>, _, State) ->
     erlang:error(not_implemented),
     increment_pc(1, State);
 % Bitwise AND operations
-decode(<<16#A:4, LowNibble/bits>>, _, State) ->
+decode(<<16#A:4, LowNibble:4>>, _, State) when LowNibble < 16#8 ->
     io:fwrite("BAND"),
     erlang:error(not_implemented),
     increment_pc(1, State);
+decode(<<16#A:4, LowNibble:4>>, _, State) when LowNibble >= 16#8 ->
+    io:fwrite("BXOR~n"),
+    increment_pc(1, alu:xxor(State, op2(LowNibble)));
 % Bitwise OR operations
 decode(<<16#B:4, LowNibble/bits>>, _, State) ->
     io:fwrite("BOR"),
@@ -148,9 +150,8 @@ decode(<<H:4, L:4>>, Code, State)
     NewState = load_imm(State, Code, [H, L]),
     increment_pc(2, NewState);
 % Loads to/from memory
-decode(<<H:4, LowNibble/bits>>, _, State) when H >= 4, H =< 7 ->
-    <<NibbleVal:4/integer>> = LowNibble,
-    io:fwrite("LD: 0x~.16B~.16B: ", [H, NibbleVal]),
+decode(<<H:4, LowNibble:4>>, _, State) when H >= 4, H =< 7 ->
+    io:fwrite("LD: 0x~.16B~.16B: ", [H, LowNibble]),
     NewState = load(State, load_dest(H, LowNibble), op2(LowNibble)),
     increment_pc(1, NewState);
 % Unrecognized instruction (error condition, used for development)
