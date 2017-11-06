@@ -5,7 +5,7 @@
 
 jump(unconditional, Code, State) ->
     Address = get_addr(Code),
-    io:fwrite("JP NZ to address = 0x~.16B~n", [Address]),
+    io:fwrite("to address = 0x~.16B", [Address]),
     NewState = do_jump(true, Address, State),
     update_tick(16, NewState).
 

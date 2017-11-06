@@ -11,21 +11,21 @@ read_mem(State, Addr) ->
 
 write_mem(State, Addr, Value) ->
     NewMem = array:set(Addr, Value, dict:fetch(mem, State)),
-    io:fwrite("mem[0x~.16B] = 0x~.16B~n", [Addr, Value]),
+    io:fwrite("mem[0x~.16B] = 0x~.16B", [Addr, Value]),
     dict:store(mem, NewMem, State).
 
 
 load(State, Dest, Source) when Source == hl ->
     Address = get_hl(State),
-    io:fwrite("read memory at addr=~w~n", [Address]),
+    io:fwrite("read memory at addr=~w", [Address]),
     NewState = dict:store(Dest, read_mem(State, Address), State),
     update_tick(8, NewState);
 load(State, Dest, Source) when Dest == hl ->
-    io:fwrite("load memory from ~w!~n", [Source]),
+    io:fwrite("load memory from ~w!", [Source]),
     NewState = write_mem(State, get_hl(State), 0),
     update_tick(8, NewState);
 load(State, Dest, Source) ->
-    io:fwrite("ld ~w->~w~n", [Source, Dest]),
+    io:fwrite("ld ~w->~w", [Source, Dest]),
     NewState = dict:store(Dest, dict:fetch(Source, State), State),
     update_tick(4, NewState).
 
@@ -36,12 +36,12 @@ load_imm_dest(High, Low) ->
 % Load single immediate word to location in memory
 load_imm_impl(hl, State, Data) ->
     Address = get_hl(State),
-    io:fwrite("mem[0x~.16B] with 0x~.16B~n", [Address, Data]),
+    io:fwrite("mem[0x~.16B] with 0x~.16B", [Address, Data]),
     NewState = write_mem(State, Address, Data),
     update_tick(12, NewState);
 % Load single word immediate to a register
 load_imm_impl(Dest, State, Data) ->
-    io:fwrite("~w with 0x~.16B~n", [Dest, Data]),
+    io:fwrite("~w with 0x~.16B", [Dest, Data]),
     NewState = dict:store(Dest, Data, State),
     update_tick(8, NewState).
 
@@ -50,11 +50,11 @@ load_imm(State, Code, [High, Low]) ->
     load_imm_impl(load_imm_dest(High, Low), State, hd(Code)).
 
 load_imm_d_impl([H, L], State, High, Low) ->
-    io:fwrite("load ~w~w with 0x~.16B~.16B~n", [H, L, High, Low]),
+    io:fwrite("load ~w~w with 0x~.16B~.16B", [H, L, High, Low]),
     NewState = dict:store(H, High, State),
     dict:store(L, Low, NewState);
 load_imm_d_impl([sp], State, High, Low) ->
-    io:fwrite("load sp with 0x~.16B~.16B~n", [High, Low]),
+    io:fwrite("load sp with 0x~.16B~.16B", [High, Low]),
     Data = (High bsl 8) bor Low,
     dict:store(sp, Data, State).
 
