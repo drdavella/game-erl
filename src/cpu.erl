@@ -4,6 +4,8 @@
 -import(utils, [inc16/1, update_tick/2]).
 -import(interrupt, [disable_interrupts/1, process_interrupts/1]).
 
+-include("registers.hrl").
+
 -ifdef(TEST).
 -compile(export_all).
 -else.
@@ -78,9 +80,9 @@ tick(Code, State) ->
     process_interrupts(NewState).
 
 load_dest(High, Low) ->
-    lists:nth((High - 4) * 2 + (Low div 8) + 1, [b,c,d,e,h,l,hl,a]).
+    lists:nth((High - 4) * 2 + (Low div 8) + 1, ?REGISTERS).
 op2(Index) ->
-    lists:nth((Index rem 8) + 1, [b,c,d,e,h,l,hl,a]).
+    lists:nth((Index rem 8) + 1, ?REGISTERS).
 increment_pc(Inc, State) ->
     dict:update_counter(pc, Inc, State).
 

@@ -2,6 +2,8 @@
 -import(utils, [inc16/1, dec16/1, update_tick/2]).
 -export([load/3, load_imm/3, load_imm_d/3, load_and_update/3]).
 
+-include("registers.hrl").
+
 
 get_hl(State) ->
     (dict:fetch(h, State) bsl 8) bor dict:fetch(l, State).
@@ -31,7 +33,7 @@ load(State, Dest, Source) ->
 
 load_imm_dest(High, Low) ->
     Index = maps:get(Low, #{6=>0,16#e=>1}) + (High * 2) + 1,
-    lists:nth(Index, [b,c,d,e,h,l,hl,a]).
+    lists:nth(Index, ?REGISTERS).
 
 % Load single immediate word to location in memory
 load_imm_impl(hl, State, Data) ->
