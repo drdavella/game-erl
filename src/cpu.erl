@@ -130,6 +130,11 @@ decode(<<16#9:4, LowNibble/bits>>, _, State) ->
     ?LOG_DESCRIPTION("SUBTRACT"),
     erlang:error(not_implemented),
     increment_pc(1, State);
+% 8-bit DEC register
+decode(<<H:4, L:4>>, _, State)
+  when H < 16#4, L == 16#5; H < 16#4, L == 16#d ->
+    ?LOG_DESCRIPTION("DEC "),
+    increment_pc(1, alu:dec(H, L, State));
 % Bitwise AND operations
 decode(<<16#A:4, LowNibble:4>>, _, State) when LowNibble < 16#8 ->
     ?LOG_DESCRIPTION("BAND"),

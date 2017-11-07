@@ -1,0 +1,1 @@
+-define(REGISTERS, [b,c,d,e,h,l,hl,a]).
