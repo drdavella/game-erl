@@ -1,20 +1,36 @@
 -module(jump).
 -import(utils, [update_tick/2]).
--export([jump/3]).
+-export([jp/3, jr/5]).
 
+-define(CONDITIONS, [nz, nc, z, c]).
 
-jump(unconditional, Code, State) ->
-    Address = get_addr(Code),
-    io:fwrite("to address = 0x~.16B", [Address]),
-    NewState = do_jump(true, Address, State),
-    update_tick(16, NewState).
 
 do_jump(true, Addr, State) ->
+    io:fwrite("to address = 0x~.16B", [Addr]),
     dict:store(pc, Addr, State);
 do_jump(false, _, State) ->
-    % We should actually update the tick counter here
     State.
 
 get_addr(Code) ->
     [Low, High | _] = Code,
     (High bsl 8) bor Low.
+
+get_condition(H, L, Offset) ->
+    Index = (H - Offset) * 2 + (L div 8),
+    lists:nth(Index+1, ?CONDITIONS).
+
+jp(unconditional, Code, State) ->
+    update_tick(16, do_jump(true, get_addr(Code), State)).
+
+jr_impl(true, Addr, State) ->
+    NewAddr = Addr + dict:fetch(pc, State),
+    update_tick(16, do_jump(true, NewAddr, State));
+jr_impl(false, _, State) ->
+    % No jump, just advance to the next instruction
+    NewAddr = dict:fetch(pc, State) + 2, % This instruction is 2 bytes long
+    update_tick(12, dict:store(pc, NewAddr, State)).
+
+jr(conditional, H, L, Addr, State) ->
+    Condition = get_condition(H, L, 2),
+    io:fwrite("~w ", [Condition]),
+    jr_impl(flags:check_condition(Condition, State), Addr, State).

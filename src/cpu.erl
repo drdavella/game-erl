@@ -1,5 +1,4 @@
 -module(cpu).
--import(jump, [jump/3]).
 -import(memory, [load/3, load_imm/3, load_imm_d/3, load_and_update/3]).
 -import(utils, [inc16/1, update_tick/2]).
 -import(interrupt, [disable_interrupts/1, process_interrupts/1]).
@@ -106,7 +105,13 @@ decode(<<16#76>>, _, State) ->
 % JP unconditional
 decode(<<16#c3>>, Code, State) ->
     ?LOG_DESCRIPTION("JP (unconditional) "),
-    jump(unconditional, Code, State);
+    jump:jp(unconditional, Code, State);
+% JR conditional
+decode(<<H:4, L:4>>, Code, State)
+  when L == 0, H >= 2, H < 4; L == 8, H >= 2, H < 4 ->
+    ?LOG_DESCRIPTION("JR (conditional) "),
+    jump:jr(conditional, H, L, hd(Code), State);
+    % do NOT increment the PC here!!!
 % LD (HL+), A
 decode(<<16#22>>, _, State) ->
     ?LOG_DESCRIPTION("LD (HL+), A"),
