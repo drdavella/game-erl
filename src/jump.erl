@@ -5,6 +5,9 @@
 -define(CONDITIONS, [nz, nc, z, c]).
 
 
+ubyte_to_sbyte(Value) ->
+    -(Value band 16#80) + (Value band 16#7f).
+
 do_jump(true, Addr, State) ->
     io:fwrite("to address = 0x~.16B", [Addr]),
     dict:store(pc, Addr, State);
@@ -22,8 +25,10 @@ get_condition(H, L, Offset) ->
 jp(unconditional, Code, State) ->
     update_tick(16, do_jump(true, get_addr(Code), State)).
 
-jr_impl(true, Addr, State) ->
-    NewAddr = Addr + dict:fetch(pc, State),
+jr_impl(true, Offset, State) ->
+    % The offset is treated as an 8-bit signed integer
+    % Account for the size of this instruction in the offset
+    NewAddr = ubyte_to_sbyte(Offset) + dict:fetch(pc, State) + 2,
     update_tick(16, do_jump(true, NewAddr, State));
 jr_impl(false, _, State) ->
     % No jump, just advance to the next instruction
