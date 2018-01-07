@@ -4,3 +4,5 @@
 _build
 rebar.lock
 TODO
+roms
+*.bundle
